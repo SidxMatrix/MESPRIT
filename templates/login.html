@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MESPRIT Healthcare AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-md">
+        <!-- Logo/Header -->
+        <!-- Logo/Header -->
+<div class="text-center mb-8">
+    <div class="flex justify-center mb-4">
+        <img src="{{ url_for('static', filename='images/generated-image.png') }}" 
+             alt="MESPRIT Logo" 
+             class="w-32 h-32 rounded-2xl shadow-2xl">
+    </div>
+    <h1 class="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+    <p class="text-gray-400">Sign in to access MESPRIT Healthcare AI</p>
+</div>
+
+
+        <!-- Login Card -->
+        <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+            <form id="loginForm" class="space-y-6">
+                <!-- Username -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                    <input type="text" id="username" required
+                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                        placeholder="Enter your username">
+                </div>
+                <!-- Password (with toggle) -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                    <input type="password" id="password" required
+                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+                        placeholder="Enter your password">
+                    <button type="button" id="togglePassword" tabindex="-1"
+                        class="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none"
+                        aria-label="Toggle password visibility">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-slate-900/50 text-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                        <span class="ml-2 text-sm text-gray-400">Remember me</span>
+                    </label>
+                    <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition">Forgot password?</a>
+                </div>
+                <!-- Forgot Password Modal -->
+<div id="forgotModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+    <div class="bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+        <h2 class="text-2xl font-bold text-white mb-4">Forgot Password?</h2>
+        <p class="text-gray-400 text-sm mb-6">Enter your email address and we'll send you a password reset link.</p>
+        
+        <input type="email" id="forgotEmail" 
+               class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition mb-4"
+               placeholder="Enter your email">
+        
+        <div id="forgotMessage" class="hidden mb-4 px-4 py-3 rounded-lg text-sm"></div>
+        
+        <div class="flex gap-3">
+            <button id="forgotCancel" class="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition">
+                Cancel
+            </button>
+            <button id="forgotSubmit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                Send Reset Link
+            </button>
+        </div>
+    </div>
+</div>
+                <!-- Forgot Password Modal Script -->
+                 <script>
+    // Forgot Password Modal Logic
+    const forgotLink = document.querySelector('a[href="#"]'); // The "Forgot password?" link
+    const forgotModal = document.getElementById('forgotModal');
+    const forgotCancel = document.getElementById('forgotCancel');
+    const forgotSubmit = document.getElementById('forgotSubmit');
+    const forgotEmail = document.getElementById('forgotEmail');
+    const forgotMessage = document.getElementById('forgotMessage');
+
+    // Open modal when clicking "Forgot password?"
+    forgotLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        forgotModal.classList.remove('hidden');
+        forgotEmail.value = '';
+        forgotMessage.classList.add('hidden');
+    });
+
+    // Close modal when clicking Cancel
+    forgotCancel.addEventListener('click', () => {
+        forgotModal.classList.add('hidden');
+    });
+
+    // Handle form submission
+    forgotSubmit.addEventListener('click', async () => {
+        const email = forgotEmail.value.trim();
+        
+        // Validate email
+        if (!email || !email.includes('@')) {
+            forgotMessage.textContent = 'Please enter a valid email address.';
+            forgotMessage.className = 'bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm mb-4';
+            forgotMessage.classList.remove('hidden');
+            return;
+        }
+
+        // Disable button and show loading
+        forgotSubmit.disabled = true;
+        forgotSubmit.textContent = 'Sending...';
+
+        try {
+            const response = await fetch('/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                forgotMessage.textContent = data.message;
+                forgotMessage.className = 'bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm mb-4';
+                forgotMessage.classList.remove('hidden');
+                forgotEmail.value = '';
+            } else {
+                forgotMessage.textContent = data.error || 'An error occurred. Please try again.';
+                forgotMessage.className = 'bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm mb-4';
+                forgotMessage.classList.remove('hidden');
+            }
+        } catch (error) {
+            forgotMessage.textContent = 'Connection error. Please try again.';
+            forgotMessage.className = 'bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm mb-4';
+            forgotMessage.classList.remove('hidden');
+        } finally {
+            forgotSubmit.disabled = false;
+            forgotSubmit.textContent = 'Send Reset Link';
+        }
+    });
+
+    // Close modal when clicking outside
+    forgotModal.addEventListener('click', (e) => {
+        if (e.target === forgotModal) {
+            forgotModal.classList.add('hidden');
+        }
+    });
+</script>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm"></div>
+                <!-- Submit Button -->
+                <button type="submit" id="loginButton"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition duration-200 flex items-center justify-center gap-2">
+                    <span>Sign In</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </button>
+            </form>
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-slate-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-slate-800/50 text-gray-400">Don't have an account?</span>
+                </div>
+            </div>
+            <!-- Sign Up Link -->
+            <a href="/signup" class="block w-full text-center bg-slate-900/50 hover:bg-slate-900/80 border border-slate-600 text-white font-medium py-3 rounded-lg transition duration-200">
+                Create Account
+            </a>
+        </div>
+        <!-- Footer -->
+        <p class="text-center text-gray-500 text-sm mt-8">
+            © 2025 MESPRIT Healthcare AI Platform
+        </p>
+    </div>
+    <script>
+        // Password viewer toggle logic
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            if (type === 'password') {
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                `;
+            } else {
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.964 9.964 0 012.294-3.555m2.651-2.651A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.969 9.969 0 01-4.103 5.16M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 3l18 18" />
+                `;
+            }
+        });
+        // Login AJAX
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = passwordInput.value;
+            const errorMsg = document.getElementById('errorMessage');
+            const loginButton = document.getElementById('loginButton');
+            loginButton.innerHTML = '<span>Signing in...</span>';
+            loginButton.disabled = true;
+            errorMsg.classList.add('hidden');
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    errorMsg.textContent = data.error || 'Login failed. Please try again.';
+                    errorMsg.classList.remove('hidden');
+                    loginButton.innerHTML = '<span>Sign In</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>';
+                    loginButton.disabled = false;
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Connection error. Please check your internet connection.';
+                errorMsg.classList.remove('hidden');
+                loginButton.innerHTML = '<span>Sign In</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>';
+                loginButton.disabled = false;
+            }
+        });
+        
+    </script>
+</body>
+</html>

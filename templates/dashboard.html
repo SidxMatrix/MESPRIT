@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <div class="bg-yellow-900/20 border border-yellow-600/30 rounded-xl p-4 text-center mb-8">
+    <p class="text-yellow-300 text-sm">
+        ⚠️ <strong>Medical Disclaimer:</strong> MESPRIT is an AI decision support tool. 
+        Not a substitute for professional medical advice.
+    </p>
+</div>
+
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MESPRIT Healthcare AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        /* Light Mode */
+body.light-mode {
+    background: linear-gradient(135deg, #5B86E5 0%, #36D1DC 100%);
+}
+/* Make disclaimer pop in light mode */
+body.light-mode .bg-yellow-900\/20 {
+    background: rgba(254, 243, 199, 0.9) !important;
+    border: 2px solid rgba(251, 191, 36, 0.8) !important;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3) !important;
+}
+
+body.light-mode .text-yellow-300 {
+    color: #b45309 !important;
+    font-weight: 600 !important;
+}
+
+
+body.light-mode nav {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border-color: rgba(245, 245, 220, 0.6) !important;
+    border-width: 2px !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+body.light-mode .bg-emerald-500\/10 { 
+    background: rgba(16, 185, 129, 0.25) !important; 
+    border: 2px solid rgba(16, 185, 129, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+body.light-mode .text-emerald-300 { 
+    color: #047857 !important; 
+    font-weight: 600 !important;
+}
+
+
+body.light-mode .text-white { 
+    color: #0f172a !important; 
+    font-weight: 700 !important;
+}
+
+body.light-mode .text-gray-300 { 
+    color: #334155 !important; 
+    font-weight: 500 !important;
+}
+
+body.light-mode .text-gray-400 { 
+    color: #475569 !important; 
+    font-weight: 500 !important;
+}
+
+body.light-mode .text-gray-500 { 
+    color: #64748b !important; 
+}
+
+body.light-mode .text-blue-300 { color: #1e40af !important; }
+body.light-mode .text-blue-400 { color: #1d4ed8 !important; }
+body.light-mode .text-emerald-300 { color: #059669 !important; }
+body.light-mode .text-purple-400 { color: #7c3aed !important; }
+body.light-mode .text-red-400 { color: #dc2626 !important; }
+body.light-mode .text-orange-400 { color: #ea580c !important; }
+
+body.light-mode .border-slate-700 { 
+    border-color: rgba(222, 217, 200, 0.5) !important; 
+    border-width: 1.5px !important;
+}
+
+body.light-mode input {
+    background: rgba(250, 249, 246, 0.9) !important;
+    color: #0f172a !important;
+    border-color: rgba(222, 217, 200, 0.6) !important;
+    border-width: 1.5px !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    font-weight: 500 !important;
+}
+
+body.light-mode input::placeholder {
+    color: #64748b !important;
+}
+
+body.light-mode .bg-slate-900\/50,
+body.light-mode .bg-slate-800\/50 {
+    background: rgba(250, 249, 246, 0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 3px solid rgba(180, 160, 120, 0.8) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
+                inset 0 2px 4px rgba(255, 255, 255, 0.8),
+                0 0 0 1px rgba(255, 255, 255, 0.4) inset !important;
+}
+
+body.light-mode .border-slate-700 { 
+    border: 2px solid rgba(180, 160, 120, 0.7) !important;
+}
+
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen">
+    <!-- Professional Navigation Bar -->
+    <nav class="bg-slate-900/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex items-center justify-between max-w-7xl">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='images/generated-image.png') }}" 
+                     alt="MESPRIT Logo" 
+                     class="w-10 h-10 rounded-lg">
+                <div>
+                    <div class="text-white font-semibold text-lg">MESPRIT</div>
+                    <div class="text-blue-300 text-xs">Healthcare AI Platform</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+    <div class="text-right mr-4">
+        <div class="text-white text-sm font-medium">{{ full_name }}</div>
+        <div class="text-gray-400 text-xs">@{{ username }}</div>
+    </div>
+    
+    <button id="themeToggle" class="p-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 transition group">
+        <svg id="darkIcon" class="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+        <svg id="lightIcon" class="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+    </button>
+    
+    <a href="/logout" class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+
+
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Sign Out
+                    
+                    
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-12 max-w-7xl">
+        <!-- Welcome Section -->
+        <div class="mb-12 fade-in">
+            <h1 class="text-4xl font-bold text-white mb-2">Welcome back, {{ full_name }}!</h1>
+            <p class="text-gray-300">Access AI-powered healthcare predictions and analytics</p>
+        </div>
+        <!-- Search Bar -->
+<div class="mb-8 fade-in">
+    <div class="max-w-2xl mx-auto">
+        <div class="relative">
+            <input 
+                type="text" 
+                id="searchBar"
+                placeholder="Search models, predictions, or features..."
+                class="w-full px-6 py-4 pl-14 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition"
+            >
+            <svg class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <div id="searchResults" class="absolute top-full mt-2 w-full bg-slate-800 border border-slate-700 rounded-xl shadow-2xl hidden max-h-96 overflow-y-auto z-50"></div>
+        </div>
+    </div>
+</div>
+
+
+        <!-- System Status -->
+        <div id="status" class="mb-12 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-4 text-center transition-all duration-500">
+            <div class="flex items-center justify-center gap-3 text-gray-400">
+                <div class="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-sm font-medium">Initializing system connection...</span>
+            </div>
+        </div>
+
+        <!-- Feature Metrics -->
+        <div class="grid grid-cols-4 gap-6 mb-12">
+            <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 text-center hover:border-blue-500/50 transition">
+                <div class="text-3xl font-bold text-white mb-1">99.2%</div>
+                <div class="text-gray-400 text-sm">System Uptime</div>
+            </div>
+            <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 text-center hover:border-blue-500/50 transition">
+                <div class="text-3xl font-bold text-white mb-1">&lt;2s</div>
+                <div class="text-gray-400 text-sm">Avg Response Time</div>
+            </div>
+            <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 text-center hover:border-blue-500/50 transition">
+                <div class="text-3xl font-bold text-white mb-1">5</div>
+                <div class="text-gray-400 text-sm">AI Models</div>
+            </div>
+            <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 text-center hover:border-blue-500/50 transition">
+                <div class="text-3xl font-bold text-white mb-1">HIPAA</div>
+                <div class="text-gray-400 text-sm">Compliant</div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Models (2/3 width) -->
+            <div class="lg:col-span-2 space-y-6">
+                <h2 class="text-2xl font-bold text-white mb-4">AI Models</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Disease Prediction -->
+                    <a href="/models/disease" class="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-600 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Disease Prediction</h3>
+                        <p class="text-gray-400 text-sm mb-3">Multi-class classification model for disease detection</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>Active</span>
+                        </div>
+                    </a>
+
+                    <!-- Readmission Risk -->
+                    <a href="/models/readmission" class="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 hover:border-purple-500/50 hover:bg-slate-800/80 transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center group-hover:bg-purple-500/20 transition">
+                                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-600 group-hover:text-purple-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Readmission Risk</h3>
+                        <p class="text-gray-400 text-sm mb-3">30-day readmission probability assessment</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>Active</span>
+                        </div>
+                    </a>
+
+                    <!-- Cost Estimation -->
+                    <a href="/models/cost" class="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 hover:border-emerald-500/50 hover:bg-slate-800/80 transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center group-hover:bg-emerald-500/20 transition">
+                                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-600 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Cost Estimation</h3>
+                        <p class="text-gray-400 text-sm mb-3">Treatment cost prediction and analysis</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>Active</span>
+                        </div>
+                    </a>
+
+                    <!-- Mortality Risk -->
+                    <a href="/models/mortality" class="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 hover:border-red-500/50 hover:bg-slate-800/80 transition-all duration-300">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center group-hover:bg-red-500/20 transition">
+                                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-600 group-hover:text-red-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Mortality Risk</h3>
+                        <p class="text-gray-400 text-sm mb-3">APACHE II-based mortality scoring</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>Active</span>
+                        </div>
+                    </a>
+
+                    <!-- KTAS Triage -->
+                    <a href="/models/ktas" class="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6 hover:border-orange-500/50 hover:bg-slate-800/80 transition-all duration-300 md:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center group-hover:bg-orange-500/20 transition">
+                                <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-600 group-hover:text-orange-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">KTAS Triage</h3>
+                        <p class="text-gray-400 text-sm mb-3">Emergency department patient prioritization</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span>Active</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column: Recent History (1/3 width) -->
+            <div class="space-y-6">
+                <h2 class="text-2xl font-bold text-white mb-4">Recent Activity</h2>
+                
+                <div id="historyContainer" class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl p-6">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="text-center">
+                            <div class="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                            <p class="text-gray-400 text-sm">Loading history...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-16 pt-8 border-t border-slate-800">
+            <div class="flex items-center justify-between text-sm text-gray-500">
+                <div>© 2025 MESPRIT Healthcare AI Platform. All rights reserved.</div>
+                <div class="flex items-center gap-6">
+                    <a href="#" class="hover:text-gray-300 transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-gray-300 transition">Terms of Service</a>
+                    <a href="#" class="hover:text-gray-300 transition">Contact</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkBackend() {
+            const statusDiv = document.getElementById("status");
+            try {
+                const res = await fetch("http://localhost:8000/health");
+                if (res.ok) {
+                    statusDiv.className = "mb-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-center transition-all duration-500";
+                    statusDiv.innerHTML = `
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                            <span class="text-sm font-medium text-emerald-300">All systems operational</span>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                statusDiv.className = "mb-12 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center transition-all duration-500";
+                statusDiv.innerHTML = `
+                    <div class="flex items-center justify-center gap-3">
+                        <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+                        <span class="text-sm font-medium text-red-300">System offline - Backend not responding</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadHistory() {
+    try {
+        const res = await fetch('/api/user/history');
+        const data = await res.json();
+        const container = document.getElementById('historyContainer');
+        
+        if (data.success && data.history && data.history.length > 0) {
+            container.innerHTML = '<div class="space-y-3">' + data.history.map(item => {
+                const modelType = item[0];
+                const result = item[1];
+                const confidence = item[2];
+                const timestamp = item[3];
+                
+                let formattedDate = 'Recently';
+                try {
+                    const date = new Date(timestamp.replace(' ', 'T') + '+05:30');
+                    if (!isNaN(date.getTime())) {
+                        formattedDate = date.toLocaleString('en-IN', { 
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true,
+                            timeZone: 'Asia/Kolkata'
+                        });
+                    }
+                } catch (e) {
+                    formattedDate = timestamp.split(' ')[0];
+                }
+                
+                return `
+                    <div class="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 hover:border-blue-500/30 transition">
+                        <div class="flex items-start justify-between mb-2">
+                            <span class="text-blue-400 text-sm font-medium">${modelType}</span>
+                            <span class="text-xs text-gray-500">${formattedDate}</span>
+                        </div>
+                        <p class="text-white text-sm mb-1">${result}</p>
+                        ${confidence ? `<p class="text-gray-400 text-xs">Confidence: ${(confidence * 100).toFixed(1)}%</p>` : ''}
+                    </div>
+                `;
+            }).join('') + '</div>';
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <p class="text-gray-400 text-sm">No predictions yet</p>
+                    <p class="text-gray-500 text-xs mt-1">Start using AI models to see your history</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById('historyContainer').innerHTML = `
+            <div class="text-center py-8">
+                <p class="text-red-400 text-sm">Failed to load history</p>
+            </div>
+            
+        `;
+    }
+}
+
+
+        checkBackend();
+        loadHistory();
+        setInterval(checkBackend, 10000);
+        // Search functionality
+const searchBar = document.getElementById('searchBar');
+const searchResults = document.getElementById('searchResults');
+
+const searchableContent = [
+    { type: 'model', name: 'Disease Prediction', desc: 'Multi-class classification model for disease detection', url: '/models/disease', keywords: 'disease diagnosis pneumonia covid hepatitis' },
+    { type: 'model', name: 'Readmission Risk', desc: '30-day readmission probability assessment', url: '/models/readmission', keywords: 'readmission hospital return probability' },
+    { type: 'model', name: 'Cost Estimation', desc: 'Treatment cost prediction and analysis', url: '/models/cost', keywords: 'cost money billing treatment expense' },
+    { type: 'model', name: 'Mortality Risk', desc: 'APACHE II-based mortality scoring', url: '/models/mortality', keywords: 'mortality death risk apache survival' },
+    { type: 'model', name: 'KTAS Triage', desc: 'Emergency department patient prioritization', url: '/models/ktas', keywords: 'triage emergency urgent priority level' }
+];
+
+searchBar.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 2) {
+        searchResults.classList.add('hidden');
+        return;
+    }
+    
+    const results = searchableContent.filter(item => 
+        item.name.toLowerCase().includes(query) || 
+        item.desc.toLowerCase().includes(query) ||
+        item.keywords.toLowerCase().includes(query)
+    );
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = `
+            <div class="p-6 text-center">
+                <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-gray-400 text-sm">No results found for "${query}"</p>
+                <p class="text-gray-500 text-xs mt-1">Try searching for disease, cost, or triage</p>
+            </div>
+        `;
+        searchResults.classList.remove('hidden');
+        return;
+    }
+    
+    searchResults.innerHTML = results.map(item => `
+        <a href="${item.url}" class="block p-4 hover:bg-slate-700/50 transition border-b border-slate-700 last:border-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="text-white font-medium text-sm">${item.name}</div>
+                    <div class="text-gray-400 text-xs">${item.desc}</div>
+                </div>
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </div>
+        </a>
+    `).join('');
+    
+    searchResults.classList.remove('hidden');
+});
+
+// Close search results when clicking outside
+document.addEventListener('click', (e) => {
+    if (!searchBar.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+    }
+});
+
+// Close search on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        searchResults.classList.add('hidden');
+        searchBar.blur();
+    }
+});
+// Theme Toggle
+const themeToggle = document.getElementById('themeToggle');
+const darkIcon = document.getElementById('darkIcon');
+const lightIcon = document.getElementById('lightIcon');
+
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+document.body.classList.add('light-mode');
+darkIcon.classList.add('hidden');
+lightIcon.classList.remove('hidden');
+}
+
+themeToggle.addEventListener('click', () => {
+document.body.classList.toggle('light-mode');
+darkIcon.classList.toggle('hidden');
+lightIcon.classList.toggle('hidden');
+localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+});
+        
+    </script>
+</body>
+</html>
+
+
+
+
+
+<img src="{{ url_for('static', filename='images/generated-image.png') }}" 
+     alt="MESPRIT Logo" 
+     class="w-15 h-15 rounded-lg">

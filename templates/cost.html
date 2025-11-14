@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Cost Estimation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        /* Light Mode - Emerald Green Gradient */
+body.light-mode {
+    background: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%);
+}
+
+body.light-mode .bg-slate-800\/50 {
+    background: rgba(250, 249, 246, 0.85) !important;
+    border-color: rgba(222, 217, 200, 0.5) !important;
+}
+
+body.light-mode .text-white { 
+    color: #0f172a !important; 
+    font-weight: 600 !important; 
+}
+
+body.light-mode .text-gray-300 { color: #334155 !important; }
+body.light-mode .text-gray-400 { color: #475569 !important; }
+
+body.light-mode input, 
+body.light-mode select {
+    background: rgba(250, 249, 246, 0.9) !important;
+    color: #0f172a !important;
+}
+
+/* Main header "Healthcare Cost Estimation" */
+body.light-mode h1.text-xl.font-bold {
+    color: #059669 !important;
+    font-weight: 800 !important;
+}
+
+body.light-mode p.text-xs {
+    color: #10b981 !important;
+    font-weight: 600 !important;
+}
+
+/* "Treatment Information" stays dark */
+body.light-mode h2.text-2xl.font-bold {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+/* Section headers */
+body.light-mode h3.text-lg {
+    color: #059669 !important;
+    font-weight: 700 !important;
+}
+
+/* Back button */
+body.light-mode a[href="/dashboard"] {
+    color: #059669 !important;
+    font-weight: 600 !important;
+    background: rgba(16, 185, 129, 0.25) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 min-h-screen">
+    <!-- Header -->
+<div class="bg-slate-800/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4 flex items-center justify-between max-w-6xl">
+        <!-- Left: Title -->
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">Healthcare Cost Estimation</h1>
+                <p class="text-xs text-emerald-300">AI-Powered Treatment Cost Predictor</p>
+            </div>
+        </div>
+        
+        <!-- Right: Theme toggle + Back button -->
+        <div class="flex items-center gap-3">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-emerald-500/50 transition">
+                <svg id="darkIcon" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+                <svg id="lightIcon" class="w-5 h-5 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </button>
+            <a href="/dashboard" class="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 rounded-lg text-sm font-medium transition">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+
+    <div class="container mx-auto px-6 py-12 max-w-6xl">
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+                    <h2 class="text-2xl font-bold text-white mb-6">Treatment Information</h2>
+                    
+                    <form id="predictionForm" class="space-y-6">
+                        <!-- Patient Demographics -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-emerald-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Patient Information
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Age</label>
+                                    <input type="number" id="age" required min="0" max="120"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Gender</label>
+                                    <select id="gender" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical Information -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-emerald-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Medical Details
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Disease/Condition</label>
+                                    <select id="disease" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                        <option value="">Select Disease</option>
+                                        <option value="Asthma">Asthma</option>
+                                        <option value="Bronchitis">Bronchitis</option>
+                                        <option value="COVID-19">COVID-19</option>
+                                        <option value="Chronic Kidney Disease">Chronic Kidney Disease</option>
+                                        <option value="Dengue">Dengue</option>
+                                        <option value="Diabetes">Diabetes</option>
+                                        <option value="Hepatitis">Hepatitis</option>
+                                        <option value="Hypertension">Hypertension</option>
+                                        <option value="Influenza">Influenza</option>
+                                        <option value="Malaria">Malaria</option>
+                                        <option value="Pneumonia">Pneumonia</option>
+                                        <option value="Tuberculosis">Tuberculosis</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hospital Information -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-emerald-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                Hospital & Treatment
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Hospital Name</label>
+                                    <select id="hospitalname" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                        <option value="">Select Hospital</option>
+                                        <option value="Apollo Hospital">Apollo Hospital</option>
+                                        <option value="Fortis Hospital">Fortis Hospital</option>
+                                        <option value="Max Hospital">Max Hospital</option>
+                                        <option value="AIIMS">AIIMS</option>
+                                        <option value="Medanta">Medanta</option>
+                                        <option value="Manipal Hospital">Manipal Hospital</option>
+                                        <option value="Lilavati Hospital">Lilavati Hospital</option>
+                                        <option value="Narayana Health">Narayana Health</option>
+                                        <option value="Columbia Asia">Columbia Asia</option>
+                                        <option value="Government Hospital">Government Hospital</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Room Type</label>
+                                    <select id="roomtype" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                        <option value="">Select Room Type</option>
+                                        <option value="General Ward">General Ward</option>
+                                        <option value="Semi-Private">Semi-Private</option>
+                                        <option value="Private">Private</option>
+                                        <option value="ICU">ICU</option>
+                                        <option value="Deluxe">Deluxe</option>
+                                        <option value="Suite">Suite</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Treatment Type</label>
+                                    <select id="treatmenttype" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                        <option value="">Select Treatment</option>
+                                        <option value="Outpatient">Outpatient</option>
+                                        <option value="Inpatient">Inpatient</option>
+                                        <option value="Emergency">Emergency</option>
+                                        <option value="Surgery">Surgery</option>
+                                        <option value="Therapy">Therapy</option>
+                                        <option value="Diagnostic">Diagnostic</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Length of Stay (days)</label>
+                                    <input type="number" id="lengthofstay" required min="1" max="365"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Severity -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-emerald-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                Severity Level
+                            </h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Condition Severity</label>
+                                <select id="severitylevel" required
+                                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+                                    <option value="">Select Severity</option>
+                                    <option value="Mild">Mild</option>
+                                    <option value="Moderate">Moderate</option>
+                                    <option value="Severe">Severe</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="predictButton"
+                                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Estimate Treatment Cost</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="lg:col-span-1">
+                <div id="resultsPanel" class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl sticky top-24">
+                    <div class="text-center py-12">
+                        <svg class="w-20 h-20 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-400 mb-2">Awaiting Input</h3>
+                        <p class="text-gray-500 text-sm">Fill the form to estimate costs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = document.getElementById('predictButton');
+            const resultsPanel = document.getElementById('resultsPanel');
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Calculating...</span>
+            `;
+            
+            resultsPanel.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Estimating Costs</h3>
+                    <p class="text-gray-400 text-sm">Analyzing treatment parameters...</p>
+                </div>
+            `;
+            
+            try {
+                const patientData = {
+                    age: parseInt(document.getElementById('age').value),
+                    gender: document.getElementById('gender').value,
+                    disease: document.getElementById('disease').value,
+                    hospitalname: document.getElementById('hospitalname').value,
+                    roomtype: document.getElementById('roomtype').value,
+                    treatmenttype: document.getElementById('treatmenttype').value,
+                    lengthofstay: parseInt(document.getElementById('lengthofstay').value),
+                    severitylevel: document.getElementById('severitylevel').value
+                };
+                
+                const response = await fetch('http://localhost:8000/api/cost/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patientData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const minCost = result.min_cost;
+                    const predictedCost = result.predicted_cost;
+                    const maxCost = result.max_cost;
+                    const category = result.category;
+                    
+                    let colorClass, bgClass;
+                    if (category === 'Low Cost') {
+                        colorClass = 'text-green-400';
+                        bgClass = 'bg-green-500/20 border-green-500/30';
+                    } else if (category === 'Medium Cost') {
+                        colorClass = 'text-yellow-400';
+                        bgClass = 'bg-yellow-500/20 border-yellow-500/30';
+                    } else if (category === 'High Cost') {
+                        colorClass = 'text-orange-400';
+                        bgClass = 'bg-orange-500/20 border-orange-500/30';
+                    } else {
+                        colorClass = 'text-red-400';
+                        bgClass = 'bg-red-500/20 border-red-500/30';
+                    }
+                    
+                    resultsPanel.innerHTML = `
+                        <div class="fade-in">
+                            <div class="text-center mb-6">
+                                <div class="w-20 h-20 ${bgClass} border rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-10 h-10 ${colorClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-400 mb-2">Estimated Cost</h3>
+                                <div class="text-4xl font-bold ${colorClass} mb-2">₹${predictedCost.toLocaleString('en-IN')}</div>
+                                <p class="text-xs text-gray-500">${category}</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-3 text-sm">Cost Range</h4>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-400">Minimum</span>
+                                            <span class="text-green-400 font-semibold">₹${minCost.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        <div class="relative">
+                                            <div class="w-full bg-slate-800 rounded-full h-2"></div>
+                                            <div class="absolute top-0 left-0 h-2 bg-gradient-to-r from-green-500 via-emerald-500 to-red-500 rounded-full" style="width: 100%"></div>
+                                            <div class="absolute top-0 h-2 w-1 bg-white rounded-full shadow-lg" style="left: 50%; transform: translateX(-50%)"></div>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-gray-400">Maximum</span>
+                                            <span class="text-red-400 font-semibold">₹${maxCost.toLocaleString('en-IN')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-3 text-sm">Cost Breakdown</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Hospital Charges</span>
+                                            <span class="text-white">~${(predictedCost * 0.4).toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Doctor Fees</span>
+                                            <span class="text-white">~${(predictedCost * 0.25).toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Medications</span>
+                                            <span class="text-white">~${(predictedCost * 0.2).toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Tests & Procedures</span>
+                                            <span class="text-white">~${(predictedCost * 0.15).toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+                                        </div>
+                                        <div class="pt-2 border-t border-slate-700 flex justify-between font-semibold">
+                                            <span class="text-gray-300">Total Estimate</span>
+                                            <span class="${colorClass}">₹${predictedCost.toLocaleString('en-IN')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="${bgClass} border rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-2 flex items-center gap-2 text-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Important Note
+                                    </h4>
+                                    <p class="text-gray-300 text-xs leading-relaxed">
+                                        This is an AI-generated estimate. Actual costs may vary based on complications, additional procedures, and insurance coverage. Please consult with hospital billing for accurate quotes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || 'Cost estimation failed');
+                }
+                
+            } catch (error) {
+                resultsPanel.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-red-400 mb-2">Estimation Failed</h3>
+                        <p class="text-gray-400 text-sm">${error.message}</p>
+                        <p class="text-gray-500 text-xs mt-2">Please verify your inputs and try again</p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Estimate Treatment Cost</span>
+                `;
+            }
+        });
+        // Theme Toggle
+const themeToggle = document.getElementById('themeToggle');
+const darkIcon = document.getElementById('darkIcon');
+const lightIcon = document.getElementById('lightIcon');
+
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+    darkIcon.classList.add('hidden');
+    lightIcon.classList.remove('hidden');
+}
+
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    darkIcon.classList.toggle('hidden');
+    lightIcon.classList.toggle('hidden');
+    localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+});
+
+    </script>
+</body>
+</html>

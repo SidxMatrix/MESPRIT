@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortality Risk Score Calculator (APACHE II)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        /* Light Mode - Red/Pink Gradient with Glass */
+body.light-mode {
+    background: linear-gradient(135deg, #fca5a5 0%, #f87171 50%, #fb7185 100%);
+}
+
+body.light-mode .bg-slate-800\/50 {
+    background: rgba(255, 250, 250, 0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    border-color: rgba(252, 165, 165, 0.4) !important;
+    box-shadow: 0 8px 32px rgba(248, 113, 113, 0.1) !important;
+}
+
+body.light-mode .text-white { 
+    color: #0f172a !important; 
+    font-weight: 600 !important; 
+}
+
+body.light-mode .text-gray-300 { color: #334155 !important; }
+body.light-mode .text-gray-400 { color: #475569 !important; }
+
+body.light-mode input, 
+body.light-mode select {
+    background: rgba(255, 250, 250, 0.9) !important;
+    color: #0f172a !important;
+    border-color: rgba(252, 165, 165, 0.3) !important;
+}
+
+/* Main header */
+body.light-mode h1.text-xl.font-bold {
+    color: #dc2626 !important;
+    font-weight: 800 !important;
+}
+
+body.light-mode p.text-xs {
+    color: #ef4444 !important;
+    font-weight: 600 !important;
+}
+
+/* Patient Assessment stays dark */
+body.light-mode h2.text-2xl.font-bold {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+/* Section headers */
+body.light-mode h3.text-lg {
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+}
+
+/* Back button */
+body.light-mode a[href="/dashboard"] {
+    color: #dc2626 !important;
+    font-weight: 600 !important;
+    background: rgba(220, 38, 38, 0.25) !important;
+    border-color: rgba(220, 38, 38, 0.4) !important;
+}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 min-h-screen">
+    <!-- Header -->
+<div class="bg-slate-800/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4 flex items-center justify-between max-w-6xl">
+        <!-- Left: Title -->
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">Mortality Risk Assessment</h1>
+                <p class="text-xs text-red-300">APACHE II-Based Scoring System</p>
+            </div>
+        </div>
+        
+        <!-- Right: Theme toggle + Back button -->
+        <div class="flex items-center gap-3">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-red-500/50 transition">
+                <svg id="darkIcon" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+                <svg id="lightIcon" class="w-5 h-5 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </button>
+            <a href="/dashboard" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 rounded-lg text-sm font-medium transition">
+                ← Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+    <div class="container mx-auto px-6 py-12 max-w-6xl">
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+                    <h2 class="text-2xl font-bold text-white mb-6">Patient Assessment</h2>
+                    
+                    <form id="predictionForm" class="space-y-6">
+                        <!-- Demographics -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-red-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Demographics
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Age</label>
+                                    <input type="number" id="age" required min="0" max="120"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Gender</label>
+                                    <select id="gender" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Diagnosis -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-red-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Diagnosis
+                            </h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Primary Diagnosis</label>
+                                <select id="diagnosis" required
+                                        class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                    <option value="">Select Diagnosis</option>
+                                    <option value="Asthma">Asthma</option>
+                                    <option value="Bronchitis">Bronchitis</option>
+                                    <option value="COVID-19">COVID-19</option>
+                                    <option value="Chronic Kidney Disease">Chronic Kidney Disease</option>
+                                    <option value="Dengue">Dengue</option>
+                                    <option value="Diabetes">Diabetes</option>
+                                    <option value="Healthy">Healthy</option>
+                                    <option value="Hepatitis">Hepatitis</option>
+                                    <option value="Hypertension">Hypertension</option>
+                                    <option value="Influenza">Influenza</option>
+                                    <option value="Malaria">Malaria</option>
+                                    <option value="Pneumonia">Pneumonia</option>
+                                    <option value="Tuberculosis">Tuberculosis</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Vital Signs -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-red-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                Vital Signs
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Body Temperature (°C)</label>
+                                    <input type="number" id="bodytemperature" required min="30" max="45" step="0.1"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Heart Rate (bpm)</label>
+                                    <input type="number" id="heartrate" required min="30" max="200"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Respiratory Rate (breaths/min)</label>
+                                    <input type="number" id="respiratoryrate" required min="8" max="50"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Oxygen Saturation (%)</label>
+                                    <input type="number" id="oxygensaturation" required min="50" max="100"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Systolic BP (mmHg)</label>
+                                    <input type="number" id="systolicbp" required min="50" max="250"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Diastolic BP (mmHg)</label>
+                                    <input type="number" id="diastolicbp" required min="30" max="150"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Factors -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-red-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Risk Factors
+                            </h3>
+                            
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Family History</label>
+                                    <select id="familyhistory" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Smoking Status</label>
+                                    <select id="smokingstatus" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                        <option value="Never">Never</option>
+                                        <option value="Former">Former</option>
+                                        <option value="Current">Current</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Alcohol Use</label>
+                                    <select id="alcoholuse" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20">
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="predictButton"
+                                class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-red-500/50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Calculate Mortality Risk</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="lg:col-span-1">
+                <div id="resultsPanel" class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl sticky top-24">
+                    <div class="text-center py-12">
+                        <svg class="w-20 h-20 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-400 mb-2">Awaiting Assessment</h3>
+                        <p class="text-gray-500 text-sm">Enter vital signs to calculate risk</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = document.getElementById('predictButton');
+            const resultsPanel = document.getElementById('resultsPanel');
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Calculating...</span>
+            `;
+            
+            resultsPanel.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Assessing Risk</h3>
+                    <p class="text-gray-400 text-sm">Computing mortality score...</p>
+                </div>
+            `;
+            
+            try {
+                const patientData = {
+                    age: parseInt(document.getElementById('age').value),
+                    gender: document.getElementById('gender').value,
+                    diagnosis: document.getElementById('diagnosis').value,
+                    bodytemperature: parseFloat(document.getElementById('bodytemperature').value),
+                    heartrate: parseInt(document.getElementById('heartrate').value),
+                    respiratoryrate: parseInt(document.getElementById('respiratoryrate').value),
+                    oxygensaturation: parseInt(document.getElementById('oxygensaturation').value),
+                    systolicbp: parseInt(document.getElementById('systolicbp').value),
+                    diastolicbp: parseInt(document.getElementById('diastolicbp').value),
+                    familyhistory: document.getElementById('familyhistory').value,
+                    smokingstatus: document.getElementById('smokingstatus').value,
+                    alcoholuse: document.getElementById('alcoholuse').value
+                };
+                
+                const response = await fetch('http://localhost:8000/api/mortality/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patientData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const score = result.score;
+                    const category = result.category;
+                    const message = result.message;
+                    const action = result.action;
+                    const breakdown = result.breakdown;
+                    
+                    let colorClass, bgClass, progressColor;
+                    if (category === 'Low Risk') {
+                        colorClass = 'text-green-400';
+                        bgClass = 'bg-green-500/20 border-green-500/30';
+                        progressColor = 'from-green-500 to-green-600';
+                    } else if (category === 'Medium Risk') {
+                        colorClass = 'text-yellow-400';
+                        bgClass = 'bg-yellow-500/20 border-yellow-500/30';
+                        progressColor = 'from-yellow-500 to-yellow-600';
+                    } else {
+                        colorClass = 'text-red-400';
+                        bgClass = 'bg-red-500/20 border-red-500/30';
+                        progressColor = 'from-red-500 to-red-600';
+                    }
+                    
+                    resultsPanel.innerHTML = `
+                        <div class="fade-in">
+                            <div class="text-center mb-6">
+                                <div class="w-24 h-24 ${bgClass} border-2 rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                                    <div class="text-center">
+                                        <div class="text-3xl font-bold ${colorClass}">${score}</div>
+                                        <div class="text-xs text-gray-400">/ 100</div>
+                                    </div>
+                                </div>
+                                <h3 class="text-xl font-bold ${colorClass} mb-2">${category}</h3>
+                                <p class="text-gray-400 text-sm">${message}</p>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm text-gray-400">Risk Score</span>
+                                    <span class="text-sm font-semibold text-white">${score}%</span>
+                                </div>
+                                <div class="w-full bg-slate-800 rounded-full h-3">
+                                    <div class="bg-gradient-to-r ${progressColor} h-3 rounded-full transition-all duration-500" style="width: ${score}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-3 text-sm">Score Breakdown</h4>
+                                    <div class="space-y-2 text-sm">
+                                        ${Object.entries(breakdown).map(([key, value]) => `
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-gray-400 capitalize">${key.replace(/_/g, ' ')}</span>
+                                                <span class="text-white font-medium">${value} pts</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="${bgClass} border rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-2 flex items-center gap-2 text-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Recommended Action
+                                    </h4>
+                                    <p class="text-gray-300 text-xs leading-relaxed">${action}</p>
+                                </div>
+                                
+                                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-2 text-sm">Clinical Notes</h4>
+                                    <ul class="space-y-1 text-xs text-gray-400">
+                                        <li>• APACHE II score based on vital signs</li>
+                                        <li>• Higher scores indicate increased mortality risk</li>
+                                        <li>• Clinical judgment supersedes score</li>
+                                        <li>• Re-assess if condition changes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || 'Risk calculation failed');
+                }
+                
+            } catch (error) {
+                resultsPanel.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-red-400 mb-2">Calculation Failed</h3>
+                        <p class="text-gray-400 text-sm">${error.message}</p>
+                        <p class="text-gray-500 text-xs mt-2">Please check vital signs and try again</p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Calculate Mortality Risk</span>
+                `;
+            }
+        });
+        // Theme Toggle
+const themeToggle = document.getElementById('themeToggle');
+const darkIcon = document.getElementById('darkIcon');
+const lightIcon = document.getElementById('lightIcon');
+
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+    darkIcon.classList.add('hidden');
+    lightIcon.classList.remove('hidden');
+}
+
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    darkIcon.classList.toggle('hidden');
+    lightIcon.classList.toggle('hidden');
+    localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+});
+
+    </script>
+</body>
+</html>

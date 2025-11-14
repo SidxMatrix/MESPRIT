@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30-Day Readmission Risk Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        
+        /* Light Mode - Purple Glassmorphism for Readmission */
+        body.light-mode {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+        }
+
+        body.light-mode nav {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px) !important;
+            border-color: rgba(245, 245, 220, 0.6) !important;
+        }
+
+        body.light-mode .bg-slate-800\/50,
+        body.light-mode .bg-slate-900\/50,
+        body.light-mode .bg-slate-800 {
+            background: rgba(250, 249, 246, 0.85) !important;
+            backdrop-filter: blur(10px) !important;
+            border-color: rgba(222, 217, 200, 0.5) !important;
+            border-width: 1.5px !important;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1) !important;
+        }
+
+        body.light-mode .text-white { 
+            color: #0f172a !important; 
+            font-weight: 600 !important; 
+        }
+
+        body.light-mode .text-gray-300 { color: #334155 !important; }
+        body.light-mode .text-gray-400 { color: #475569 !important; }
+
+        body.light-mode input, 
+        body.light-mode select {
+            background: rgba(250, 249, 246, 0.9) !important;
+            color: #0f172a !important;
+        }
+
+        /* Make header bold */
+        body.light-mode h1.text-xl,
+        body.light-mode h2.text-2xl {
+            color: #7c3aed !important;
+            font-weight: 800 !important;
+        }
+
+        body.light-mode p.text-xs {
+            color: #9333ea !important;
+            font-weight: 600 !important;
+        }
+
+        /* Section headers */
+        body.light-mode h3.text-lg {
+            color: #7c3aed !important;
+            font-weight: 700 !important;
+        }
+
+        /* Back to Dashboard button */
+        body.light-mode a[href="/dashboard"] {
+            color: #7c3aed !important;
+            font-weight: 600 !important;
+            background: rgba(124, 58, 237, 0.25) !important;
+            border-color: rgba(124, 58, 237, 0.4) !important;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen">
+    <!-- Header -->
+    <div class="bg-slate-800/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex items-center justify-between max-w-6xl">
+            <!-- Left side: Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white">30-Day Readmission Risk</h1>
+                    <p class="text-xs text-purple-300">AI-Powered Risk Assessment</p>
+                </div>
+            </div>
+            
+            <!-- Right side: Theme toggle + Back button -->
+            <div class="flex items-center gap-3">
+                <button id="themeToggle" class="p-2 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition">
+                    <svg id="darkIcon" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <svg id="lightIcon" class="w-5 h-5 text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </button>
+                <a href="/dashboard" class="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-300 rounded-lg text-sm font-medium transition">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-6 py-12 max-w-6xl">
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+                    <h2 class="text-2xl font-bold text-white mb-6">Patient Information</h2>
+                    
+                    <form id="predictionForm" class="space-y-6">
+                        <!-- Demographics -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Demographics
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Age</label>
+                                    <input type="number" id="age" required min="0" max="120"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Gender</label>
+                                    <select id="gender" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vital Signs -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                Vital Signs
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Heart Rate (bpm)</label>
+                                    <input type="number" id="heartrate" required min="30" max="200"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Body Temperature (°C)</label>
+                                    <input type="number" id="bodytemperature" required min="30" max="45" step="0.1"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Respiratory Rate (breaths/min)</label>
+                                    <input type="number" id="respiratoryrate" required min="8" max="50"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Oxygen Saturation (%)</label>
+                                    <input type="number" id="oxygensaturation" required min="50" max="100"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Blood Pressure (mmHg)</label>
+                                    <input type="number" id="bloodpressure" required min="50" max="220"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                                           placeholder="e.g., 120">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lifestyle -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+                                </svg>
+                                Lifestyle Factors
+                            </h3>
+                            
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Smoking Status</label>
+                                    <select id="smokingstatus" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="Never">Never</option>
+                                        <option value="Former">Former</option>
+                                        <option value="Current">Current</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Alcohol Use</label>
+                                    <select id="alcoholuse" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Physical Activity</label>
+                                    <select id="physicalactivitylevel" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="Low">Low</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical History -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Medical History
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Family History</label>
+                                    <select id="familyhistory" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Diagnosis</label>
+                                    <select id="diagnosis" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="">Select Diagnosis</option>
+                                        <option value="Asthma">Asthma</option>
+                                        <option value="Bronchitis">Bronchitis</option>
+                                        <option value="COVID-19">COVID-19</option>
+                                        <option value="Chronic Kidney Disease">Chronic Kidney Disease</option>
+                                        <option value="Dengue">Dengue</option>
+                                        <option value="Diabetes">Diabetes</option>
+                                        <option value="Hepatitis">Hepatitis</option>
+                                        <option value="Hypertension">Hypertension</option>
+                                        <option value="Influenza">Influenza</option>
+                                        <option value="Malaria">Malaria</option>
+                                        <option value="Pneumonia">Pneumonia</option>
+                                        <option value="Tuberculosis">Tuberculosis</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Previous Admissions</label>
+                                    <input type="number" id="previousadmissions" required min="0" max="50"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Length of Stay (days)</label>
+                                    <input type="number" id="lengthofstay" required min="1" max="365"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Treatment Details -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                </svg>
+                                Treatment Details
+                            </h3>
+                            
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Medication Adherence</label>
+                                    <select id="medicationadherence" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Number of Medications</label>
+                                    <input type="number" id="numberofmedications" required min="0" max="50"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Support System</label>
+                                    <select id="supportsystem" required
+                                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                        <option value="Poor">Poor</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="Strong">Strong</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Factors -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-purple-300 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                Risk Assessment
+                            </h3>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Comorbidities</label>
+                                    <input type="number" id="comorbidities" required min="0" max="20"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Risk Score</label>
+                                    <input type="number" id="riskscore" required min="0" max="100"
+                                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="predictButton"
+                                class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-purple-500/50">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            <span>Predict Readmission Risk</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="lg:col-span-1">
+                <div id="resultsPanel" class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl sticky top-24">
+                    <div class="text-center py-12">
+                        <svg class="w-20 h-20 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-gray-400 mb-2">Awaiting Analysis</h3>
+                        <p class="text-gray-500 text-sm">Complete the form to assess readmission risk</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = document.getElementById('predictButton');
+            const resultsPanel = document.getElementById('resultsPanel');
+            
+            button.disabled = true;
+            button.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Analyzing...</span>
+            `;
+            
+            resultsPanel.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Processing Data</h3>
+                    <p class="text-gray-400 text-sm">Analyzing patient information...</p>
+                </div>
+            `;
+            
+            try {
+                const patientData = {
+                    age: parseInt(document.getElementById('age').value),
+                    gender: document.getElementById('gender').value,
+                    heartrate: parseInt(document.getElementById('heartrate').value),
+                    bodytemperature: parseFloat(document.getElementById('bodytemperature').value),
+                    respiratoryrate: parseInt(document.getElementById('respiratoryrate').value),
+                    oxygensaturation: parseInt(document.getElementById('oxygensaturation').value),
+                    bloodpressure: parseInt(document.getElementById('bloodpressure').value),
+                    smokingstatus: document.getElementById('smokingstatus').value,
+                    alcoholuse: document.getElementById('alcoholuse').value,
+                    physicalactivitylevel: document.getElementById('physicalactivitylevel').value,
+                    familyhistory: document.getElementById('familyhistory').value,
+                    diagnosis: document.getElementById('diagnosis').value,
+                    previousadmissions: parseInt(document.getElementById('previousadmissions').value),
+                    lengthofstay: parseInt(document.getElementById('lengthofstay').value),
+                    medicationadherence: document.getElementById('medicationadherence').value,
+                    numberofmedications: parseInt(document.getElementById('numberofmedications').value),
+                    supportsystem: document.getElementById('supportsystem').value,
+                    comorbidities: parseInt(document.getElementById('comorbidities').value),
+                    riskscore: parseInt(document.getElementById('riskscore').value)
+                };
+                
+                const response = await fetch('http://localhost:8000/api/readmission/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patientData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const riskLevel = result.predicted_risk;
+                    const confidence = (result.confidence * 100).toFixed(1);
+                    
+                    let colorClass, bgClass, icon;
+                    if (riskLevel === 'Low') {
+                        colorClass = 'text-green-400';
+                        bgClass = 'bg-green-500/20 border-green-500/30';
+                        icon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;
+                    } else if (riskLevel === 'Medium') {
+                        colorClass = 'text-yellow-400';
+                        bgClass = 'bg-yellow-500/20 border-yellow-500/30';
+                        icon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>`;
+                    } else {
+                        colorClass = 'text-red-400';
+                        bgClass = 'bg-red-500/20 border-red-500/30';
+                        icon = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>`;
+                    }
+                    
+                    resultsPanel.innerHTML = `
+                        <div class="fade-in">
+                            <div class="text-center mb-6">
+                                <div class="w-20 h-20 ${bgClass} border rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-10 h-10 ${colorClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        ${icon}
+                                    </svg>
+                                </div>
+                                <h3 class="text-2xl font-bold ${colorClass} mb-2">${riskLevel} Risk</h3>
+                                <p class="text-gray-400 text-sm">30-Day Readmission Probability</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-gray-400 text-sm">Confidence Level</span>
+                                        <span class="text-white font-semibold">${confidence}%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-800 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-500" style="width: ${confidence}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-3">Risk Distribution</h4>
+                                    <div class="space-y-2">
+                                        ${Object.entries(result.all_probabilities).map(([risk, prob]) => `
+                                            <div class="flex items-center justify-between text-sm">
+                                                <span class="text-gray-400">${risk}</span>
+                                                <span class="text-white font-medium">${(prob * 100).toFixed(1)}%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-800 rounded-full h-1.5">
+                                                <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-1.5 rounded-full" style="width: ${(prob * 100).toFixed(1)}%"></div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="${bgClass} border rounded-lg p-4">
+                                    <h4 class="text-white font-semibold mb-2 flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Recommendation
+                                    </h4>
+                                    <p class="text-gray-300 text-sm">
+                                        ${riskLevel === 'Low' ? 'Standard discharge protocol. Regular follow-up appointments recommended.' :
+                                          riskLevel === 'Medium' ? 'Enhanced discharge planning advised. Consider home health services and closer follow-up.' :
+                                          'High-risk patient. Intensive case management, medication reconciliation, and early follow-up within 48-72 hours strongly recommended.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || 'Prediction failed');
+                }
+                
+            } catch (error) {
+                resultsPanel.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold text-red-400 mb-2">Analysis Failed</h3>
+                        <p class="text-gray-400 text-sm">${error.message}</p>
+                        <p class="text-gray-500 text-xs mt-2">Please check your input and try again</p>
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                    <span>Predict Readmission Risk</span>
+                `;
+            }
+        });
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const darkIcon = document.getElementById('darkIcon');
+        const lightIcon = document.getElementById('lightIcon');
+
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            darkIcon.classList.add('hidden');
+            lightIcon.classList.remove('hidden');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            darkIcon.classList.toggle('hidden');
+            lightIcon.classList.toggle('hidden');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        });
+    </script>
+</body>
+</html>
