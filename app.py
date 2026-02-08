@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+import os
 import pickle
 import pandas as pd
 import numpy as np
@@ -16,13 +18,21 @@ from itsdangerous import URLSafeTimedSerializer
 # Database connection with timeout
 def get_db_connection():
     conn = sqlite3.connect('users.db', timeout=10.0)
+    conn.row_factory = sqlite3.Row
     return conn
 
 
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = secrets.token_hex(32)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
+if not os.environ.get('FLASK_SECRET_KEY'):
+    logging.warning("FLASK_SECRET_KEY not set; using a temporary key. Sessions will reset on restart.")
 CORS(app)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', 'true').lower() == 'true',
+    SESSION_COOKIE_SAMESITE=os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax'),
+)
 
 # ==================== FLASK-MAIL CONFIGURATION ====================
 # ==================== FLASK-MAIL CONFIGURATION ====================
@@ -30,9 +40,9 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = 'MAIL_USERNAME'  # gmail address for sending emails
-app.config['MAIL_PASSWORD'] = 'MAIL_PASSWORD'  # app password
-app.config['MAIL_DEFAULT_SENDER'] = 'vipersid2904@gmail.com'  # Same as MAIL_USERNAME
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')  # gmail address for sending emails
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')  # app password
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or app.config['MAIL_USERNAME']
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
@@ -40,7 +50,7 @@ serializer = URLSafeTimedSerializer(app.secret_key)
 
 # ==================== DATABASE SETUP ====================
 def init_db():
-    conn = sqlite3.connect('users.db')
+    conn = get_db_connection()
     c = conn.cursor()
     
     c.execute('''CREATE TABLE IF NOT EXISTS users
@@ -92,21 +102,23 @@ def index():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        data = request.json
+        data = request.json or {}
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
         full_name = data.get('full_name')
+
+        if not username or not email or not password:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
         password_hash = generate_password_hash(password)
         
         try:
-            conn = sqlite3.connect('users.db')
-            c = conn.cursor()
-            c.execute('INSERT INTO users (username, email, password_hash, full_name) VALUES (?, ?, ?, ?)',
-                     (username, email, password_hash, full_name))
-            conn.commit()
-            conn.close()
+            with get_db_connection() as conn:
+                c = conn.cursor()
+                c.execute('INSERT INTO users (username, email, password_hash, full_name) VALUES (?, ?, ?, ?)',
+                         (username, email, password_hash, full_name))
+                conn.commit()
             return jsonify({'success': True, 'message': 'Account created successfully'})
         except sqlite3.IntegrityError:
             return jsonify({'success': False, 'error': 'Username or email already exists'}), 400
@@ -117,20 +129,22 @@ def signup():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        data = request.json
+        data = request.json or {}
         username = data.get('username')
         password = data.get('password')
+
+        if not username or not password:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('SELECT id, password_hash, full_name FROM users WHERE username = ?', (username,))
-        user = c.fetchone()
-        conn.close()
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute('SELECT id, password_hash, full_name FROM users WHERE username = ?', (username,))
+            user = c.fetchone()
         
-        if user and check_password_hash(user[1], password):
-            session['user_id'] = user[0]
+        if user and check_password_hash(user['password_hash'], password):
+            session['user_id'] = user['id']
             session['username'] = username
-            session['full_name'] = user[2]
+            session['full_name'] = user['full_name']
             return jsonify({'success': True, 'message': 'Login successful'})
         else:
             return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
@@ -148,15 +162,20 @@ def logout():
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
     """Handle forgot password request and send reset email"""
-    data = request.json
+    data = request.json or {}
     email = data.get('email')
+
+    if not email:
+        return jsonify({'success': False, 'error': 'Email is required'}), 400
+
+    if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
+        return jsonify({'success': False, 'error': 'Email service is not configured.'}), 500
     
     # Check if user exists
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('SELECT id, username FROM users WHERE email = ?', (email,))
-    user = c.fetchone()
-    conn.close()
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute('SELECT id, username FROM users WHERE email = ?', (email,))
+        user = c.fetchone()
     
     if not user:
         # Don't reveal if email exists for security
@@ -205,11 +224,10 @@ def reset_password(token):
         pw_hash = generate_password_hash(password)
         
         # Update password in database
-        conn = sqlite3.connect('users.db')
-        c = conn.cursor()
-        c.execute('UPDATE users SET password_hash = ? WHERE email = ?', (pw_hash, email))
-        conn.commit()
-        conn.close()
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute('UPDATE users SET password_hash = ? WHERE email = ?', (pw_hash, email))
+            conn.commit()
         
         return """
         <!DOCTYPE html>
@@ -277,29 +295,27 @@ def get_user_history():
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('''SELECT model_type, result, confidence, timestamp 
-                 FROM predictions WHERE user_id = ? 
-                 ORDER BY timestamp DESC LIMIT 10''', (session['user_id'],))
-    history = c.fetchall()
-    conn.close()
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        c.execute('''SELECT model_type, result, confidence, timestamp 
+                     FROM predictions WHERE user_id = ? 
+                     ORDER BY timestamp DESC LIMIT 10''', (session['user_id'],))
+        history = c.fetchall()
     
-    return jsonify({'success': True, 'history': history})
+    return jsonify({'success': True, 'history': [tuple(row) for row in history]})
 
 
 def save_prediction(model_type, input_data, result, confidence=None):
     if 'user_id' in session:
-        conn = sqlite3.connect('users.db', timeout=10.0)
-        c = conn.cursor()
-        ist = pytz.timezone('Asia/Kolkata')
-        current_time = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S')
-        clean_input = "Patient assessment"
-        c.execute('''INSERT INTO predictions (user_id, model_type, input_data, result, confidence, timestamp)
-                     VALUES (?, ?, ?, ?, ?, ?)''',
-                 (session['user_id'], model_type, clean_input, result, confidence, current_time))
-        conn.commit()
-        conn.close()
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            ist = pytz.timezone('Asia/Kolkata')
+            current_time = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S')
+            clean_input = "Patient assessment"
+            c.execute('''INSERT INTO predictions (user_id, model_type, input_data, result, confidence, timestamp)
+                         VALUES (?, ?, ?, ?, ?, ?)''',
+                     (session['user_id'], model_type, clean_input, result, confidence, current_time))
+            conn.commit()
 
 
 # ==================== DISEASE PREDICTION ====================
@@ -712,4 +728,5 @@ if __name__ == '__main__':
     print("="*70)
     print("Main URL: http://localhost:8000")
     print("="*70 + "\n")
-    app.run(debug=True, port=8000, host='0.0.0.0')
+    debug_enabled = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_enabled, port=8000, host='0.0.0.0')
