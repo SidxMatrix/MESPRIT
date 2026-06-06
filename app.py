@@ -86,7 +86,7 @@ with open('models/readmission_risk_model.pkl', 'rb') as f:
     readmission_artifacts = pickle.load(f)
 with open('models/cost_estimation_model.pkl', 'rb') as f:
     cost_artifacts = pickle.load(f)
-with open('models/ktas_model.pkl', 'rb') as f:
+with open('models/KTAS_model.pkl', 'rb') as f:
     ktas_artifacts = pickle.load(f)
 print("✓ All models loaded successfully!")
 
