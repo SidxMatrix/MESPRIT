@@ -318,7 +318,7 @@ body.light-mode a[href="/dashboard"] {
                     severitylevel: document.getElementById('severitylevel').value
                 };
                 
-                const response = await fetch('http://localhost:8000/api/cost/predict', {
+               const response = await fetch('/api/cost/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(patientData)

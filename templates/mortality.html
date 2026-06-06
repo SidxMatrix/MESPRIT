@@ -320,8 +320,8 @@ body.light-mode a[href="/dashboard"] {
                     alcoholuse: document.getElementById('alcoholuse').value
                 };
                 
-                const response = await fetch('http://localhost:8000/api/mortality/calculate', {
-                    method: 'POST',
+                const response = await fetch('/api/mortality/calculate', {
+    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(patientData)
                 });

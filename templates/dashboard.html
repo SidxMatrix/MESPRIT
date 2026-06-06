@@ -354,7 +354,7 @@ body.light-mode .border-slate-700 {
         async function checkBackend() {
             const statusDiv = document.getElementById("status");
             try {
-                const res = await fetch("http://localhost:8000/health");
+                const res = await fetch("/health");
                 if (res.ok) {
                     statusDiv.className = "mb-12 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-center transition-all duration-500";
                     statusDiv.innerHTML = `

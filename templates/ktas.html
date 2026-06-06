@@ -350,7 +350,7 @@ body.light-mode a[href="/dashboard"] {
                     activitylevel: document.getElementById('activitylevel').value
                 };
                 
-                const response = await fetch('http://localhost:8000/api/ktas/predict', {
+                const response = await fetch('/api/ktas/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(patientData)
