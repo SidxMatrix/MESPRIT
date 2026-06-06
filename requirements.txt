@@ -9,3 +9,4 @@ joblib==1.3.2
 pytz
 itsdangerous
 gunicorn
+xgboost==2.1.1
