@@ -340,7 +340,7 @@ body.light-mode a[href="/dashboard"] {
                     checkedsymptoms: checkedSymptoms
                 };
                 
-                fetch('/api/disease/predict', {
+                const response = await fetch('/api/disease/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(patientData)
